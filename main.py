@@ -10,7 +10,7 @@ import time
 import signal
 
 pi_camera = VideoCamera(flip=False) # flip pi camera if upside down.
-
+signal.signal(signal.SIGINT, signal_handler)
 # App Globals (do not edit)
 app = Flask(__name__)
 
