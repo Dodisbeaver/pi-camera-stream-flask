@@ -96,4 +96,6 @@ class VideoCamera(object):
         ret, image = cv.imencode(self.file_type, frame)
         today_date = datetime.now().strftime("%m%d%Y-%H%M%S") # get current time
         cv.imwrite(str(self.photo_string + "_" + today_date + self.file_type), frame)
+    def release():
+        vs.release()
 
