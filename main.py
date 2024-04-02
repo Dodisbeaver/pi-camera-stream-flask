@@ -7,6 +7,7 @@ from flask import Flask, render_template, Response, request, send_from_directory
 from camera import VideoCamera
 import os
 import time
+import signal
 
 pi_camera = VideoCamera(flip=False) # flip pi camera if upside down.
 
@@ -40,6 +41,14 @@ def video_feed():
 def take_picture():
     pi_camera.take_picture()
     return "None"
+
+def signal_handler(sig, frame):
+    print('Caught Ctrl+C, shutting down...')
+    # Add your cleanup code here:
+    if camera:  # Assuming you have a camera_object 
+        camera.release()  # Release the camera
+    # Close any other resources (files, connections, etc.)
+    sys.exit(0)  # Exit gracefully
 
 if __name__ == '__main__':
 
