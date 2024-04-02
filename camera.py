@@ -79,6 +79,10 @@ class VideoCamera(object):
 
         
         ret, jpeg = cv.imencode(self.file_type, frame)
+        if not ret:
+            print("Error encoding frame as JPEG")
+        return None 
+
         self.previous_frame = jpeg
         return jpeg.tobytes()
 
