@@ -44,6 +44,10 @@ class VideoCamera(object):
         if not self.vs.isOpened():
             raise ValueError("Unable to open USB camera")
 
+    def id_class_name(self, class_id):  # Only takes class_id
+        for key, value in self.classNames.items():
+            if class_id == key:
+                return value
 
 
 
@@ -69,7 +73,7 @@ class VideoCamera(object):
             confidence = detection[2]
             if confidence > .5:
                 class_id = detection[1]
-                class_name= id_class_name(class_id,self.classNames)
+                class_name= self.id_class_name(class_id)
                 print(str(str(class_id) + " " + str(detection[2])  + " " + class_name))
                 box_x = detection[3] * image_width
                 box_y = detection[4] * image_height
@@ -94,8 +98,3 @@ class VideoCamera(object):
         today_date = datetime.now().strftime("%m%d%Y-%H%M%S") # get current time
         cv.imwrite(str(self.photo_string + "_" + today_date + self.file_type), frame)
 
-
-    def id_class_name(class_id, classes):
-        for key, value in self.classes.items():
-            if class_id == key:
-                return value
