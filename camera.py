@@ -44,10 +44,6 @@ class VideoCamera(object):
         if not self.vs.isOpened():
             raise ValueError("Unable to open USB camera")
 
-        def id_class_name(class_id, classes):
-            for key, value in classes.items():
-                if class_id == key:
-                    return value
 
 
 
@@ -99,3 +95,7 @@ class VideoCamera(object):
         cv.imwrite(str(self.photo_string + "_" + today_date + self.file_type), frame)
 
 
+    def id_class_name(class_id, classes):
+        for key, value in self.classes.items():
+            if class_id == key:
+                return value
