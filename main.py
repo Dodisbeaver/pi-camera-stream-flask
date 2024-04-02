@@ -6,6 +6,7 @@
 from flask import Flask, render_template, Response, request, send_from_directory
 from camera import VideoCamera
 import os
+import time
 
 pi_camera = VideoCamera(flip=False) # flip pi camera if upside down.
 
