@@ -60,7 +60,7 @@ class VideoCamera(object):
         ret, frame = self.flip_if_needed(self.vs.read())
         if not ret:  # Check if frame was read successfully
             print("Error reading frame, check camera connection")
-            return  # Or raise an exception if needed
+            return None # Or raise an exception if needed
         image_height, image_width, _ = frame.shape
         self.model.setInput(self.ocv.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
         output = self.model.forward()
