@@ -1,6 +1,6 @@
 # Make you own Raspberry Pi Camera Stream
 
-Create your own live stream from a Raspberry Pi using the Pi camera module. Build your own applications from here.
+Create your own live stream from a Raspberry Pi using a webcamera. Build your own applications from here.
 
 ## How it works
 The Pi streams the output of the camera module over the web via Flask. Devices connected to the same network would be able to access the camera stream via
@@ -27,17 +27,9 @@ Install the following dependencies to create camera stream.
 sudo apt-get update
 sudo apt-get upgrade
 
-sudo apt-get install libatlas-base-dev
-sudo apt-get install libjasper-dev
-sudo apt-get install libqtgui4
-sudo apt-get install libqt4-test
-sudo apt-get install libhdf5-dev
+sudo apt install python3-flask
+sudo apt install python3-opencv
 
-sudo pip3 install flask
-sudo pip3 install numpy
-sudo pip3 install opencv-contrib-python
-sudo pip3 install imutils
-sudo pip3 install opencv-python
 
 ```
 
