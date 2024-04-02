@@ -4,7 +4,6 @@
 
 import cv2 as cv
 # from imutils.video.pivideostream import PiVideoStream
-import imutils
 import time
 from datetime import datetime
 import numpy as np
