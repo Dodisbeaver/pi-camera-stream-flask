@@ -78,7 +78,7 @@ class VideoCamera(object):
                 cv.putText(frame,class_name ,(int(box_x), int(box_y+.05*image_height)),cv2.FONT_HERSHEY_SIMPLEX,(.005*image_width),(0, 0, 255))
 
         
-        ret, jpeg = cv.imencode(self.file_type, frame)
+        ret, jpeg = cv.imencode('.jpg', frame)
         if not ret:
             print("Error encoding frame as JPEG")
             return None 
