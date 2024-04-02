@@ -79,7 +79,7 @@ class VideoCamera(object):
                 box_width = detection[5] * image_width
                 box_height = detection[6] * image_height
                 cv.rectangle(frame, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
-                cv.putText(frame,class_name ,(int(box_x), int(box_y+.05*image_height)),cv2.FONT_HERSHEY_SIMPLEX,(.005*image_width),(0, 0, 255))
+                cv.putText(frame,class_name ,(int(box_x), int(box_y+.05*image_height)),cv.FONT_HERSHEY_SIMPLEX,(.005*image_width),(0, 0, 255))
 
         
         ret, jpeg = cv.imencode('.jpg', frame)
