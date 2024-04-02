@@ -10,6 +10,14 @@ import time
 import signal
 
 pi_camera = VideoCamera(flip=False) # flip pi camera if upside down.
+def signal_handler(sig, frame):
+    print('Caught Ctrl+C, shutting down...')
+    # Add your cleanup code here:
+    if camera:  # Assuming you have a camera_object 
+        camera.release()  # Release the camera
+    # Close any other resources (files, connections, etc.)
+    sys.exit(0)  # Exit gracefully
+
 signal.signal(signal.SIGINT, signal_handler)
 # App Globals (do not edit)
 app = Flask(__name__)
@@ -42,13 +50,6 @@ def take_picture():
     pi_camera.take_picture()
     return "None"
 
-def signal_handler(sig, frame):
-    print('Caught Ctrl+C, shutting down...')
-    # Add your cleanup code here:
-    if camera:  # Assuming you have a camera_object 
-        camera.release()  # Release the camera
-    # Close any other resources (files, connections, etc.)
-    sys.exit(0)  # Exit gracefully
 
 if __name__ == '__main__':
 
