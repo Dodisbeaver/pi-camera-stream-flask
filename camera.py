@@ -68,7 +68,7 @@ class VideoCamera(object):
             confidence = detection[2]
             if confidence > .5:
                 class_id = detection[1]
-                class_name= self.id_class_name(class_id,classNames)
+                class_name= self.id_class_name(class_id,self.classNames)
                 print(str(str(class_id) + " " + str(detection[2])  + " " + class_name))
                 box_x = detection[3] * image_width
                 box_y = detection[4] * image_height
