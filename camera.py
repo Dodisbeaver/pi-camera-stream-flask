@@ -35,7 +35,7 @@ class VideoCamera(object):
         self.flip = flip # Flip frame vertically
         self.file_type = file_type # image type i.e. .jpg
         self.photo_string = photo_string # Name to save the photo
-        self.model = cv2.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
+        self.model = cv.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
                                       'models/ssd_mobilenet_v2_coco_2018_03_29.pbtxt')
 
         time.sleep(2.0)
@@ -59,7 +59,7 @@ class VideoCamera(object):
             print("Error reading frame, check camera connection")
             return  # Or raise an exception if needed
         image_height, image_width, _ = frame.shape
-        self.model.setInput(cv2.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
+        self.model.setInput(cv.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
         output = model.forward()
 
         for detection in output[0, 0, :, :]:
@@ -72,8 +72,8 @@ class VideoCamera(object):
                 box_y = detection[4] * image_height
                 box_width = detection[5] * image_width
                 box_height = detection[6] * image_height
-                cv2.rectangle(frame, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
-                cv2.putText(frame,class_name ,(int(box_x), int(box_y+.05*image_height)),cv2.FONT_HERSHEY_SIMPLEX,(.005*image_width),(0, 0, 255))
+                cv.rectangle(frame, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
+                cv.putText(frame,class_name ,(int(box_x), int(box_y+.05*image_height)),cv2.FONT_HERSHEY_SIMPLEX,(.005*image_width),(0, 0, 255))
 
         
         ret, jpeg = cv.imencode(self.file_type, frame)
