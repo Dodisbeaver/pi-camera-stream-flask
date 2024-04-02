@@ -17,7 +17,7 @@ class VideoCamera(object):
         self.flip = flip # Flip frame vertically
         self.file_type = file_type # image type i.e. .jpg
         self.photo_string = photo_string # Name to save the photo
-        self.model = self.vs.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
+        self.model = cv.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
                                       'models/ssd_mobilenet_v2_coco_2018_03_29.pbtxt')
         self.classNames = {0: 'background',
               1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle', 5: 'airplane', 6: 'bus',
@@ -61,7 +61,7 @@ class VideoCamera(object):
             print("Error reading frame, check camera connection")
             return  # Or raise an exception if needed
         image_height, image_width, _ = frame.shape
-        self.model.setInput(self.vs.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
+        self.model.setInput(cv.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
         output = self.model.forward()
 
         for detection in output[0, 0, :, :]:
