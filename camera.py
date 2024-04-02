@@ -60,7 +60,7 @@ class VideoCamera(object):
             return  # Or raise an exception if needed
         image_height, image_width, _ = frame.shape
         self.model.setInput(cv.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
-        output = model.forward()
+        output = self.model.forward()
 
         for detection in output[0, 0, :, :]:
             confidence = detection[2]
