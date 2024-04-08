@@ -10,15 +10,28 @@ import time
 from datetime import datetime
 import numpy as np
 
+from pycoral.adapters.common import input_size
+from pycoral.adapters.detect import get_objects
+from pycoral.utils.dataset import read_label_file
+from pycoral.utils.edgetpu import make_interpreter
+from pycoral.utils.edgetpu import run_inference
+
+
 class VideoCamera(object):
     def __init__(self, flip = False, file_type  = ".jpg", photo_string= "stream_photo", camera_index=0):
         # self.vs = PiVideoStream(resolution=(1920, 1080), framerate=30).start()
-        self.vs = cv.VideoCapture(camera_index)
+        self.vs = cv.VideoCapture(camera_index, cv.CAP_V4L2)
+        self.vs.set(cv.CAP_PROP_FOURCC,cv.VideoWriter_fourcc('M','J','P','G'))
         self.flip = flip # Flip frame vertically
         self.file_type = file_type # image type i.e. .jpg
         self.photo_string = photo_string # Name to save the photo
         self.model = cv.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
                                       'models/ssd_mobilenet_v2_coco_2018_03_29.pbtxt')
+        self.interpreter = make_interpreter('models/mobilenet_v2_1.0_224_quant_edgetpu.tflite')
+        self.interpreter.allocate_tensors()
+        self.labels = read_label_file('models/coco_labels.txt')
+        self.inference_size = input_size(self.interpreter)
+
         self.classNames = {0: 'background',
               1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle', 5: 'airplane', 6: 'bus',
               7: 'train', 8: 'truck', 9: 'boat', 10: 'traffic light', 11: 'fire hydrant',
@@ -42,7 +55,7 @@ class VideoCamera(object):
         
         if not self.vs.isOpened():
             raise ValueError("Unable to open USB camera")
-
+        
     def id_class_name(self, class_id):  # Only takes class_id
         for key, value in self.classNames.items():
             if class_id == key:
@@ -60,29 +73,40 @@ class VideoCamera(object):
 
     def get_frame(self):
 
-        ret, frame = self.flip_if_needed(self.vs.read())
+        ret, frame = self.vs.read()
+        print('we have tried to read the frame')
+        print(self.vs)
         if not ret:  # Check if frame was read successfully
             print("Error reading frame, check camera connection")
+            print(ret)
             return None # Or raise an exception if needed
-        image_height, image_width, _ = frame.shape
-        self.model.setInput(cv.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
-        output = self.model.forward()
+        # image_height, image_width, _ = frame.shape
+        # self.model.setInput(cv.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
+        # output = self.model.forward()
 
-        for detection in output[0, 0, :, :]:
-            confidence = detection[2]
-            if confidence > .5:
-                class_id = detection[1]
-                class_name= self.id_class_name(class_id)
-                print(str(str(class_id) + " " + str(detection[2])  + " " + class_name))
-                box_x = detection[3] * image_width
-                box_y = detection[4] * image_height
-                box_width = detection[5] * image_width
-                box_height = detection[6] * image_height
-                cv.rectangle(frame, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
-                cv.putText(frame,class_name ,(int(box_x), int(box_y+.05*image_height)),cv.FONT_HERSHEY_SIMPLEX,(.005*image_width),(0, 0, 255))
+        # for detection in output[0, 0, :, :]:
+        #     confidence = detection[2]
+        #     if confidence > .5:
+        #         class_id = detection[1]
+        #         class_name= self.id_class_name(class_id)
+        #         print(str(str(class_id) + " " + str(detection[2])  + " " + class_name))
+        #         box_x = detection[3] * image_width
+        #         box_y = detection[4] * image_height
+        #         box_width = detection[5] * image_width
+        #         box_height = detection[6] * image_height
+        #         cv.rectangle(frame, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
+        #         cv.putText(frame,class_name ,(int(box_x), int(box_y+.05*image_height)),cv.FONT_HERSHEY_SIMPLEX,(.005*image_width),(0, 0, 255))
+        cv2_im = frame
+
+        cv2_im_rgb = cv.cvtColor(cv2_im, cv.COLOR_BGR2RGB)
+        cv2_im_rgb = cv.resize(cv2_im_rgb, self.inference_size)
+        run_inference(self.interpreter, cv2_im_rgb.tobytes())
+        print('we are running inference')
+        objs = get_objects(self.interpreter, 0.5)[:3]
+        cv2_im = append_objs_to_img(cv2_im, self.inference_size, objs, labels)
 
         
-        ret, jpeg = cv.imencode('.jpg', frame)
+        ret, jpeg = cv.imencode('.jpg', cv2_im)
         if not ret:
             print("Error encoding frame as JPEG")
             return None 
@@ -96,6 +120,23 @@ class VideoCamera(object):
         ret, image = cv.imencode(self.file_type, frame)
         today_date = datetime.now().strftime("%m%d%Y-%H%M%S") # get current time
         cv.imwrite(str(self.photo_string + "_" + today_date + self.file_type), frame)
+    
+    def append_objs_to_img(cv2_im, inference_size, objs, labels):
+        height, width, channels = cv2_im.shape
+        scale_x, scale_y = width / inference_size[0], height / inference_size[1]
+        for obj in objs:
+            bbox = obj.bbox.scale(scale_x, scale_y)
+            x0, y0 = int(bbox.xmin), int(bbox.ymin)
+            x1, y1 = int(bbox.xmax), int(bbox.ymax)
+
+            percent = int(100 * obj.score)
+            label = '{}% {}'.format(percent, labels.get(obj.id, obj.id))
+
+            cv2_im = cv2.rectangle(cv2_im, (x0, y0), (x1, y1), (0, 255, 0), 2)
+            cv2_im = cv2.putText(cv2_im, label, (x0, y0+30),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 2)
+        return cv2_im
+
     def release():
         vs.release()
 
