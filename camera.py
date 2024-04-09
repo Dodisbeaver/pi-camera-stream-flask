@@ -65,7 +65,7 @@ class VideoCamera(object):
             print("Error reading frame, check camera connection")
             return None # Or raise an exception if needed
         image_height, image_width, _ = frame.shape
-        self.model.setInput(cv.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
+        self.model.setInput(cv.dnn.blobFromImage(frame, size=(150,150), swapRB=True))
         output = self.model.forward()
 
         for detection in output[0, 0, :, :]:
