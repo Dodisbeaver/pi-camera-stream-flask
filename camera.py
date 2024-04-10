@@ -74,13 +74,13 @@ class VideoCamera(object):
 
     def get_frame(self):
 
-        ret, frame = self.vs.read()
+        frame = self.vs.read()
         print('we have tried to read the frame')
-        print(self.vs)
-        if not ret:  # Check if frame was read successfully
-            print("Error reading frame, check camera connection")
-            print(ret)
-            return None # Or raise an exception if needed
+        # print(self.vs)
+        # if not ret:  # Check if frame was read successfully
+        #     print("Error reading frame, check camera connection")
+        #     print(ret)
+        #     return None # Or raise an exception if needed
         # image_height, image_width, _ = frame.shape
         # self.model.setInput(cv.dnn.blobFromImage(frame, size=(300,300), swapRB=True))
         # output = self.model.forward()
