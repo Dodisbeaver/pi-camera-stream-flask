@@ -54,8 +54,8 @@ class VideoCamera(object):
 
         time.sleep(2.0)
         
-        if not self.vs.isOpened():
-            raise ValueError("Unable to open USB camera")
+        # if not self.vs.isOpened():
+        #     raise ValueError("Unable to open USB camera")
         
     def id_class_name(self, class_id):  # Only takes class_id
         for key, value in self.classNames.items():
