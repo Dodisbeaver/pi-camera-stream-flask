@@ -105,8 +105,20 @@ class VideoCamera(object):
         run_inference(self.interpreter, cv2_im_rgb.tobytes())
         print('we are running inference')
         objs = get_objects(self.interpreter, 0.5)[:3]
-        cv2_im = append_objs_to_img(cv2_im, self.inference_size, objs, self.labels)
+        # cv2_im = append_objs_to_img(cv2_im, self.inference_size, objs, self.labels)
+        height, width, channels = cv2_im.shape
+        scale_x, scale_y = width / self.inference_size[0], height / self.inference_size[1]
+        for obj in objs:
+            bbox = obj.bbox.scale(scale_x, scale_y)
+            x0, y0 = int(bbox.xmin), int(bbox.ymin)
+            x1, y1 = int(bbox.xmax), int(bbox.ymax)
 
+            percent = int(100 * obj.score)
+            label = '{}% {}'.format(percent, self.labels.get(obj.id, obj.id))
+
+            cv2_im = cv.rectangle(cv2_im, (x0, y0), (x1, y1), (0, 255, 0), 2)
+            cv2_im = cv.putText(cv2_im, label, (x0, y0+30),
+                                cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 0, 0), 2)
         
         ret, jpeg = cv.imencode('.jpg', cv2_im)
         if not ret:
