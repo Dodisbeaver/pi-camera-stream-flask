@@ -8,6 +8,7 @@ from camera import VideoCamera
 import os
 import time
 import signal
+import sys
 
 pi_camera = VideoCamera(flip=False) # flip pi camera if upside down.
 def signal_handler(sig, frame):
