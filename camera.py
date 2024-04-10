@@ -74,7 +74,6 @@ class VideoCamera(object):
     def get_frame(self):
 
         ret, frame = self.vs.read()
-        print(self.vs)
         if not ret:  # Check if frame was read successfully
             print("Error reading frame, check camera connection")
             print(ret)
