@@ -75,7 +75,7 @@ class VideoCamera(object):
     def get_frame(self):
 
         frame = self.vs.read()
-        print('we have tried to read the frame')
+
         # print(self.vs)
         # if not ret:  # Check if frame was read successfully
         #     print("Error reading frame, check camera connection")
@@ -101,9 +101,7 @@ class VideoCamera(object):
 
         cv2_im_rgb = cv.cvtColor(cv2_im, cv.COLOR_BGR2RGB)
         cv2_im_rgb = cv.resize(cv2_im_rgb, self.inference_size)
-        print('trying to run inference')
         run_inference(self.interpreter, cv2_im_rgb.tobytes())
-        print('we are running inference')
         objs = get_objects(self.interpreter, 0.5)[:3]
         # cv2_im = append_objs_to_img(cv2_im, self.inference_size, objs, self.labels)
         height, width, channels = cv2_im.shape
