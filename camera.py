@@ -141,6 +141,5 @@ class VideoCamera(object):
     
     
 
-    def release():
-        vs.release()
+    
 
