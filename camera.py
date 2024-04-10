@@ -5,7 +5,8 @@
 
 
 import cv2 as cv
-# from imutils.video.pivideostream import PiVideoStream
+import imutils
+from imutils.video.pivideostream import PiVideoStream
 import time
 from datetime import datetime
 import numpy as np
@@ -19,14 +20,14 @@ from pycoral.utils.edgetpu import run_inference
 
 class VideoCamera(object):
     def __init__(self, flip = False, file_type  = ".jpg", photo_string= "stream_photo", camera_index=0):
-        # self.vs = PiVideoStream(resolution=(1920, 1080), framerate=30).start()
-        self.vs = cv.VideoCapture(camera_index, cv.CAP_V4L2)
-        self.vs.set(cv.CAP_PROP_FOURCC,cv.VideoWriter_fourcc('M','J','P','G'))
+        self.vs = PiVideoStream(resolution=(640, 480), framerate=30).start()
+        # self.vs = cv.VideoCapture(camera_index, cv.CAP_V4L2)
+        # self.vs.set(cv.CAP_PROP_FOURCC,cv.VideoWriter_fourcc('M','J','P','G'))
         self.flip = flip # Flip frame vertically
         self.file_type = file_type # image type i.e. .jpg
         self.photo_string = photo_string # Name to save the photo
-        self.model = cv.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
-                                      'models/ssd_mobilenet_v2_coco_2018_03_29.pbtxt')
+        # self.model = cv.dnn.readNetFromTensorflow('models/frozen_inference_graph.pb',
+        #                              'models/ssd_mobilenet_v2_coco_2018_03_29.pbtxt')
         self.interpreter = make_interpreter('models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite')
         self.interpreter.allocate_tensors()
         self.labels = read_label_file('models/coco_labels.txt')
