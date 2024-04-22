@@ -11,9 +11,11 @@ import signal
 import sys
 import pygame
 import threading
+import random
 
 pi_camera = VideoCamera(flip=False) # flip pi camera if upside down.
-
+global operator_handling
+operator_handling = False
 pygame.mixer.init()
 
 sounds = {
@@ -30,6 +32,21 @@ sounds = {
 for section, filenames in sounds.items():
     for filename in filenames:
         sounds[section][filenames.index(filename)] = pygame.mixer.Sound(filename)
+
+random_number = random.randint(0,2)
+sound_channel = pygame.mixer.Channel(1)
+sound_channel.play(sounds[1][random_number])
+
+while sound_channel.get_busy():  
+
+    pygame.time.delay(10)
+
+sound_channel = pygame.mixer.Channel(1)
+sound_channel.play(sounds[7][random_number])
+
+while sound_channel.get_busy():  
+
+    pygame.time.delay(10)
 
 
 def signal_handler(sig, frame):
@@ -50,9 +67,14 @@ def index():
 
 def gen(camera):
     #get camera frame
+   
+    operator_handling = False
     can_play = True
+    found_person = False
     frames = 0
+
     while True:
+        random_number = random.randint(0,2)
         frame, person_detected = camera.get_frame()
         frames += 1
         print(frames)
@@ -66,10 +88,21 @@ def gen(camera):
         # frame = camera.get_frame()
         # yield (b'--frame\r\n'
         #        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
-        if person_detected and can_play:
+        if person_detected and can_play and not operator_handling:
             can_play = False
+            if found_person:
+                threading.Thread(target=say_something, args=(5, random_number)).start()
+            else:
+                threading.Thread(target=say_something, args=(4, random_number)).start()
+                found_person = True
             frames = 0
-            threading.Thread(target=say_something, args=(1, 2)).start()
+        if frames > 140:
+            threading.Thread(target=say_something, args=(random.randint(2,3), random_number)).start()
+            found_person = False
+            operator_handling = False
+            frames = 0
+
+
 def say_something(phrase=1, version=1):
     
     sound_channel = pygame.mixer.Channel(0)  # Use a channel for playback
@@ -85,7 +118,13 @@ def video_feed():
 # Take a photo when pressing camera button
 @app.route('/picture')
 def take_picture():
-    pi_camera.take_picture()
+    random_number = random.randint(0,2)
+    sound_channel = pygame.mixer.Channel(1)
+    sound_channel.play(sounds[6][random_number])
+    global operator_handling
+    operator_handling = True
+
+
     return "None"
 
 
