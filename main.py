@@ -8,8 +8,30 @@ from camera import VideoCamera
 import os
 import time
 import signal
+import sys
+import pygame
+import threading
 
 pi_camera = VideoCamera(flip=False) # flip pi camera if upside down.
+
+pygame.mixer.init()
+
+sounds = {
+    1: ["AUDIO/1.1.wav", "AUDIO/1.2.wav", "AUDIO/1.3.wav"],
+    2: ["AUDIO/2.1.wav", "AUDIO/2.2.wav", "AUDIO/2.3.wav"],
+    3: ["AUDIO/3.1.wav", "AUDIO/3.2.wav", "AUDIO/3.3.wav"],
+    4: ["AUDIO/4.1.wav", "AUDIO/4.2.wav", "AUDIO/4.3.wav"],
+    5: ["AUDIO/5.1.wav", "AUDIO/5.2.wav", "AUDIO/5.3.wav"],
+    6: ["AUDIO/6.1.wav", "AUDIO/6.2.wav", "AUDIO/6.3.wav"],
+    7: ["AUDIO/7.1.wav", "AUDIO/7.2.wav", "AUDIO/7.3.wav"]
+}
+
+# Load the sounds
+for section, filenames in sounds.items():
+    for filename in filenames:
+        sounds[section][filenames.index(filename)] = pygame.mixer.Sound(filename)
+
+
 def signal_handler(sig, frame):
     print('Caught Ctrl+C, shutting down...')
     # Add your cleanup code here:
@@ -28,8 +50,14 @@ def index():
 
 def gen(camera):
     #get camera frame
+    can_play = True
+    frames = 0
     while True:
-        frame = camera.get_frame()
+        frame, person_detected = camera.get_frame()
+        frames += 1
+        print(frames)
+        if frames == 100:
+            can_play = True
         if frame is not None:  
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
@@ -38,6 +66,16 @@ def gen(camera):
         # frame = camera.get_frame()
         # yield (b'--frame\r\n'
         #        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+        if person_detected and can_play:
+            can_play = False
+            frames = 0
+            threading.Thread(target=say_something, args=(1, 2)).start()
+def say_something(phrase=1, version=1):
+    
+    sound_channel = pygame.mixer.Channel(0)  # Use a channel for playback
+    sound_channel.play(sounds[phrase][version])
+
+
 
 @app.route('/video_feed')
 def video_feed():

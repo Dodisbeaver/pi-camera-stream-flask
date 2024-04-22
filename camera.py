@@ -5,6 +5,7 @@
 
 
 import cv2 as cv
+import threading
 # from imutils.video.pivideostream import PiVideoStream
 import time
 from datetime import datetime
@@ -65,30 +66,17 @@ class VideoCamera(object):
             print("Error reading frame, check camera connection")
             return None # Or raise an exception if needed
         image_height, image_width, _ = frame.shape
-        self.model.setInput(cv.dnn.blobFromImage(frame, size=(150,150), swapRB=True))
-        output = self.model.forward()
-
-        for detection in output[0, 0, :, :]:
-            confidence = detection[2]
-            if confidence > .5:
-                class_id = detection[1]
-                class_name= self.id_class_name(class_id)
-                print(str(str(class_id) + " " + str(detection[2])  + " " + class_name))
-                box_x = detection[3] * image_width
-                box_y = detection[4] * image_height
-                box_width = detection[5] * image_width
-                box_height = detection[6] * image_height
-                cv.rectangle(frame, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
-                cv.putText(frame,class_name ,(int(box_x), int(box_y+.05*image_height)),cv.FONT_HERSHEY_SIMPLEX,(.005*image_width),(0, 0, 255))
-
+        # thread = threading.Timer(3, self.d)  # 3-second delay 
+        # thread.start()
+        cp_frame, person_detected = self.detect_and_draw_person(frame)
         
-        ret, jpeg = cv.imencode('.jpg', frame)
+        ret, jpeg = cv.imencode('.jpg', cp_frame)
         if not ret:
             print("Error encoding frame as JPEG")
             return None 
 
         self.previous_frame = jpeg
-        return jpeg.tobytes()
+        return jpeg.tobytes(), person_detected
 
     # Take a photo, called by camera button
     def take_picture(self):
@@ -96,6 +84,44 @@ class VideoCamera(object):
         ret, image = cv.imencode(self.file_type, frame)
         today_date = datetime.now().strftime("%m%d%Y-%H%M%S") # get current time
         cv.imwrite(str(self.photo_string + "_" + today_date + self.file_type), frame)
-    def release():
-        vs.release()
+    
+    def release(self):
+        self.vs.release()
+
+  
+    def detect_and_draw_person(self,frame, confidence_threshold=0.5):
+        """Detects and draws bounding boxes around persons in a given frame.
+
+        Args:
+            frame: The OpenCV image frame to process.
+            model: The pre-trained object detection model.
+            id_class_name: A function to map class IDs to class names.
+            confidence_threshold: The minimum confidence level for drawing bounding boxes.
+
+        Returns:
+            The OpenCV image frame with bounding boxes drawn around detected persons.
+        """
+        person_detected = False
+        frame_copy = frame.copy()  # Avoid modifying the original frame
+
+        blob = cv.dnn.blobFromImage(frame_copy, size=(150, 150), swapRB=True)
+        self.model.setInput(blob)
+        output = self.model.forward()
+
+        for detection in output[0, 0, :, :]:
+            confidence = detection[2]
+            if confidence > confidence_threshold:
+                class_id = detection[1]
+                class_name = self.id_class_name(class_id)
+                if class_name == 'person':
+                    person_detected = True
+                    print(str(str(class_id) + " " + str(detection[2])  + " " + class_name))
+                    box_x = detection[3] * frame_copy.shape[1]  # image_width
+                    box_y = detection[4] * frame_copy.shape[0]  # image_height
+                    box_width = detection[5] * frame_copy.shape[1]  
+                    box_height = detection[6] * frame_copy.shape[0] 
+                    cv.rectangle(frame_copy, (int(box_x), int(box_y)), (int(box_width), int(box_height)), (23, 230, 210), thickness=1)
+                    cv.putText(frame_copy, class_name, (int(box_x), int(box_y + 0.05 * frame_copy.shape[0])), cv.FONT_HERSHEY_SIMPLEX, (0.005 * frame_copy.shape[1]), (0, 0, 255))
+
+        return frame_copy, person_detected 
 
